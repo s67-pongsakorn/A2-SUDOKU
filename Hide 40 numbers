@@ -12,7 +12,7 @@ class SudokuGame:
         self.create_grid()
         self.create_number_buttons()
         self.generate_full_grid()
-        self.random_cells()
+        self.remove_random_cells()
 
     def create_grid(self):
         for row in range(9):
@@ -76,7 +76,7 @@ class SudokuGame:
 
         return True
 
-    def random_cells(self):
+    def remove_random_cells(self):
         cells_to_remove = 40
         while cells_to_remove > 0:
             row = random.randint(0, 8)
