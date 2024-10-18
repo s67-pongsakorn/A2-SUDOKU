@@ -1,0 +1,110 @@
+import tkinter as tk
+from tkinter import messagebox
+import random
+
+class SudokuGame:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Sudoku")
+        self.grid = [[0] * 9 for _ in range(9)]
+        self.selected_number = None
+        self.cells = [[None] * 9 for _ in range(9)]
+        self.create_grid()
+        self.create_number_buttons()
+        self.generate_full_grid()
+        self.remove_random_cells()
+
+    def create_grid(self):
+        frame = tk.Frame(self.root)  
+        frame.grid(row=0, column=0, padx=10, pady=10)
+
+        for row in range(9):
+            for col in range(9):
+                cell_frame = tk.Frame(frame, bd=1, relief="solid")
+                cell_frame.grid(row=row, column=col, padx=(2 if col % 3 == 0 else 0, 2), pady=(2 if row % 3 == 0 else 0, 2)) 
+                cell = tk.Entry(cell_frame, width=3, font=('Arial', 18), justify='center')
+                cell.pack(padx=1, pady=1)
+                cell.bind("<FocusIn>", lambda event, r=row, c=col: self.select_cell(r, c))
+                self.cells[row][col] = cell
+
+    def create_number_buttons(self):
+        frame = tk.Frame(self.root)
+        frame.grid(row=10, column=0, columnspan=20)
+        for number in range(1, 10):
+            button = tk.Button(frame, text=str(number), font=('Arial', 14), width=5, command=lambda n=number: self.select_number(n))
+            button.grid(row=0, column=number - 1)
+
+    def select_cell(self, row, col):
+        if self.selected_number is not None and self.cells[row][col].get() == "":
+            self.cells[row][col].delete(0, tk.END)
+            self.cells[row][col].insert(0, str(self.selected_number))
+            self.grid[row][col] = self.selected_number
+            if self.is_grid_filled() == True :
+                messagebox.showinfo("Sudoku", "คุณชนะแล้ว!")
+
+    def select_number(self, number):
+        self.selected_number = number
+        
+    def generate_full_grid(self):
+        self.fill_grid(0, 0)
+
+    def fill_grid(self, row, col):
+        numbers = list(range(1, 10))
+        random.shuffle(numbers)
+
+        for number in numbers:
+            if self.is_valid_number(row, col, number):
+                self.grid[row][col] = number
+
+                if col == 8:  
+                    if row == 8:
+                        return True 
+                    if self.fill_grid(row + 1, 0):
+                        return True
+                else:
+                    if self.fill_grid(row, col + 1):
+                        return True
+
+        self.grid[row][col] = 0  
+        return False
+
+    def is_valid_number(self, row, col, number):
+        if number in self.grid[row]:
+            return False
+
+        if number in [self.grid[i][col] for i in range(9)]:
+            return False
+        
+        start_row, start_col = 3 * (row // 3), 3 * (col // 3)
+        for i in range(3):
+            for j in range(3):
+                if self.grid[start_row + i][start_col + j] == number:
+                    return False
+
+        return True
+
+    def remove_random_cells(self):
+        cells_to_remove = 40
+        while cells_to_remove > 0:
+            row = random.randint(0, 8)
+            col = random.randint(0, 8)
+            if self.grid[row][col] != 0:
+                self.grid[row][col] = 0
+                self.cells[row][col].config(state=tk.NORMAL) 
+                cells_to_remove -= 1
+
+        for row in range(9):
+            for col in range(9):
+                if self.grid[row][col] != 0:
+                    self.cells[row][col].insert(0, str(self.grid[row][col]))
+
+    def is_grid_filled(self):
+        for row in range(9):
+            for col in range(9):
+                if self.grid[row][col] == 0:
+                    return False
+        return True
+
+root = tk.Tk()
+game = SudokuGame(root)
+root.mainloop()
